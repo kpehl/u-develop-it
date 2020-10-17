@@ -1,5 +1,6 @@
 // Dependencies
 // Express.js to create the server
+const { isReturnStatement } = require('@babel/types');
 const express = require('express');
 // SQLite3 to connect to the database
     // Verbose execution mode will produce messages in the terminal
@@ -109,6 +110,31 @@ app.post('/api/candidate', ({ body }, res) => {
         });
     });
   });
+
+// An express route to update a candidate's party
+app.put('/api/candidate/:id', (req, res) => {
+    // check to make sure a party_id was provided
+    const errors = inputCheck(req.body, 'party_id');
+    if (errors) {
+        res.status(400).json({ error: errors });
+        return;
+    }
+    // if an id was provided, update the database
+    const sql = `UPDATE candidates SET party_id = ?
+                WHERE id = ?`;
+    const params = [req.body.party_id, req.params.id];
+    db.run(sql, params, function(err, result) {
+        if (err) {
+            res.status(400).json({ error: err.message });
+            return;
+        }
+        res.json({
+            message: 'success',
+            data: req.body,
+            changes: this.changes
+        });
+    });
+});
 
 // An Express route to get all data from the parties table
 app.get('/api/parties', (req, res) => {
