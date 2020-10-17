@@ -84,7 +84,7 @@ app.delete('/api/candidate/:id', (req, res) => {
     });
   });
 
-// // An Express route to create a candidate
+// An Express route to create a candidate
 app.post('/api/candidate', ({ body }, res) => {
     // check the input for errors, and if there are any, return a 400 error to the client
     const errors = inputCheck(body, 'first_name', 'last_name', 'industry_connected');
@@ -110,6 +110,50 @@ app.post('/api/candidate', ({ body }, res) => {
     });
   });
 
+// An Express route to get all data from the parties table
+app.get('/api/parties', (req, res) => {
+    const sql = `SELECT * FROM parties`;
+    const params = [];
+    db.all(sql, params, (err, rows) => {
+        if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+        }
+        res.json({
+            message: 'success',
+            data: rows
+        });
+    });
+});
+
+// An Express route to get data on a single party by id
+app.get('/api/party/:id', (req, res) => {
+    const sql = `SELECT * FROM parties WHERE id = ?`;
+    const params = [req.params.id];
+    db.get(sql, params, (err, row) => {
+        if (err) {
+            res.status(400).json({ error: err.message });
+            return;
+        }
+        res.json({
+            message: 'success',
+            data: row
+        });
+    });
+});
+
+// An Express route to delete a party by id from the parties table
+app.delete('/api/party/:id', (req, res) => {
+    const sql = `DELETE FROM parties WHERE id = ?`;
+    const params = [req.params.id];
+    db.run(sql, params, function(err, result) {
+        if (err) {
+            res.status(400).json({ error: res.message });
+            return;
+        }
+        res.json({ message: 'successfully deleted', changes: this.changes });
+    });
+});
 
 // 404 Resource Not Found Route
 // Default response for any other request(Not Found) Catch-all
