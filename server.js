@@ -5,6 +5,8 @@ const express = require('express');
     // Verbose execution mode will produce messages in the terminal
     // about the runtime state
 const sqlite3 = require('sqlite3').verbose();
+// Error check module
+const inputCheck = require('./utils/inputCheck');
 
 // Define the port and create the server application
 const PORT = process.env.PORT || 3001;
@@ -73,21 +75,36 @@ app.delete('/api/candidate/:id', (req, res) => {
     });
   });
 
-// // An SQL route to create a candidate
-// const sql = `INSERT INTO candidates (id, first_name, last_name, industry_connected) 
-//               VALUES (?,?,?,?)`;
-// const params = [1, 'Ronald', 'Firbank', 1];
-// // ES5 function, not arrow function, to use this
-// db.run(sql, params, function(err, result) {
-//   if (err) {
-//     console.log(err);
-//   }
-//   console.log(result, this.lastID);
-// });
+// // An Express route to create a candidate
+app.post('/api/candidate', ({ body }, res) => {
+    // check the input for errors, and if there are any, return a 400 error to the client
+    const errors = inputCheck(body, 'first_name', 'last_name', 'industry_connected');
+    if (errors) {
+      res.status(400).json({ error: errors });
+      return;
+    }
+    // if no errors are found, proceed with the SQL route to insert a row
+    const sql = `INSERT INTO candidates (first_name, last_name, industry_connected) 
+              VALUES (?,?,?)`;
+    const params = [body.first_name, body.last_name, body.industry_connected];
+    // ES5 function (not arrow function) so the code can use `this`
+    db.run(sql, params, function(err, result) {
+        if (err) {
+            res.status(400).json({ error: err.message });
+            return;
+        }
+        res.json({
+            message: 'success',
+            data: body,
+            id: this.lastID
+        });
+    });
+  });
+
 
 // 404 Resource Not Found Route
 // Default response for any other request(Not Found) Catch-all
-// Place after all other routes
+// (Place after all other routes so it does not override)
 app.use((req,res) => {
     res.status(404).end();
 });
