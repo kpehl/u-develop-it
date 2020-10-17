@@ -27,7 +27,11 @@ const db = new sqlite3.Database('./db/election.db', err => {
 // An Express route to return all the data in the SQLite3 candidates table
 // An error will result in a server error (500) sent back to the client
 app.get('/api/candidates', (req, res) => {
-    const sql = `SELECT * FROM candidates`;
+    const sql = `SELECT candidates.*, parties.name 
+                AS party_name 
+                FROM candidates 
+                LEFT JOIN parties 
+                ON candidates.party_id = parties.id`;
     const params = [];
     db.all(sql, params, (err, rows) => {
       if (err) {
@@ -44,7 +48,12 @@ app.get('/api/candidates', (req, res) => {
 // An Express route to get a single candidate by id from the SQLite3 candidates table
 // An error will result in a request not accepted (400) sent back to the client
 app.get('/api/candidate/:id', (req, res) => {
-    const sql = `SELECT * FROM candidates WHERE id = ?`;
+    const sql = `SELECT candidates.*, parties.name 
+                AS party_name 
+                FROM candidates 
+                LEFT JOIN parties 
+                ON candidates.party_id = parties.id 
+                WHERE candidates.id = ?`;
     const params = [req.params.id];
     db.get(sql, params, (err, row) => {
       if (err) {
